@@ -18,7 +18,7 @@ for file in os.listdir(file_path):
         logging.info(f"lowering the text started for {file_path}")
 
         text = text.lower()
-        text = re.sub(r"\s+", " ", text).strip()
+        text = re.sub(r"[ \t]+", " ", text).strip()
 
         logging.info(f"lowering the text completed for {file_path}")
         logging.info(f"removing page numbers started for {file_path}")
@@ -48,7 +48,7 @@ for file in os.listdir(file_path):
         logging.info(f"removing non-letters started for {file_path}")
 
         text = re.sub(r"[^a-z\s]", " ", text)   # keep only letters
-        text = re.sub(r"\s+", " ", text).strip()
+        text = re.sub(r"[ \t]+", " ", text).strip()
 
         logging.info(f"removing non-letters completed for {file_path}")
         logging.info(f"saving the cleaned text started for {file_path}")
