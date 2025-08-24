@@ -6,6 +6,9 @@ from src.exception import MyException
 import sys
 import torch
 
+# Store conversation history
+conversation_history = []
+
 try:
     logging.info("RAG pipeline started")
 
@@ -14,28 +17,12 @@ try:
     logging.info(f"Loading embedding model from {EMBEDDING_MODEL_PATH}")
     embedding_model = SentenceTransformer(EMBEDDING_MODEL_PATH)
 
-    # ================= Take query input from terminal ================= #
-    query = input("\nEnter your query: ").strip()
-    if not query:
-        raise ValueError("Query cannot be empty!")
-
-    query_embedding = embedding_model.encode(query)
-
-    # ================= ChromaDB Retrieval ================= #
-    logging.info("Connecting to ChromaDB and retrieving chunks based on query embedding")
+    # ================= ChromaDB Setup ================= #
+    logging.info("Connecting to ChromaDB")
     client = chromadb.PersistentClient(path="/home/saif/Desktop/pdf_rag/chroma_db")
     collection = client.get_collection("pdf_chunks")
 
-    results = collection.query(
-        query_embeddings=[query_embedding.tolist()],
-        n_results=10
-    )
-
-    retrieved_chunks = results["documents"][0]
-    context = "\n".join(retrieved_chunks)
-    logging.info("Retrieved context injected into the prompt")
-
-    # ================= LLaMA Model ================= #
+    # ================= LLaMA/Gemma Model ================= #
     LLM_PATH = "/home/saif/Desktop/pre_trained_llms/gemma-3-270m-it"
     logging.info(f"Loading LLM model from {LLM_PATH}")
 
@@ -59,26 +46,64 @@ try:
     )
     logging.info("Local LLM loaded successfully")
 
-    # ================= Prompt with context ================= #
-    prompt = f"""
-    You are a helpful assistant. Answer the question using only the provided context.
-    If the answer is not in the context, say "I couldn't find this in the provided documents."
+    # ================= Loop for Conversation ================= #
+    while True:
+        query = input("\nEnter your query (or type 'exit' to quit): ").strip()
+        if query.lower() == "exit":
+            break
+        if not query:
+            print("⚠️ Query cannot be empty!")
+            continue
 
-    Context:
-    {context}
+        logging.info("Encoding query")
+        query_embedding = embedding_model.encode(query)
+        logging.info("✅ Query encoded")
 
-    Question:
-    {query}
+        logging.info("Retrieving context from ChromaDB")
+        results = collection.query(
+            query_embeddings=[query_embedding.tolist()],
+            n_results=10
+        )
+        retrieved_chunks = sum(results["documents"], [])
+        context = "\n".join(retrieved_chunks)
+        logging.info("✅ Context retrieved from ChromaDB")
 
-    Answer:
-    """
+        # ================= Build Instruction Prompt ================= #
+        logging.info("Creating prompt for LLM")
 
-    # ================= Generate Response ================= #
-    logging.info("Generating response")
-    response = llm_pipeline(prompt)[0]["generated_text"]
+        history_text = ""
+        for turn in conversation_history[-5:]:  # keep last 5 turns
+            history_text += f"User asked: {turn['user']}\nAssistant replied: {turn['assistant']}\n\n"
 
-    logging.info("Read Generated response below \n\n")
-    print("\nResponse:\n", response)
+        prompt = f"""
+You are a helpful assistant that answers based on the provided context and conversation history.
+
+Conversation history:
+{history_text}
+
+Context:
+{context}
+
+User question:
+{query}
+
+Answer clearly and concisely:
+"""
+
+        logging.info("✅ Prompt created")
+
+        # ================= Generate Response ================= #
+        logging.info("Generating response from given prompt")
+        raw_response = llm_pipeline(prompt)[0]["generated_text"].strip()
+
+        # safety truncation if model roleplays
+        response = raw_response.split("USER:")[0].split("ASSISTANT:")[0].strip()
+
+        print("\nResponse:\n", response)
+
+        # ================= Save Conversation ================= #
+        logging.info("Saving this conversation to history")
+        conversation_history.append({"user": query, "assistant": response})
 
 except Exception as e:
     raise MyException(e, sys) from e
