@@ -14,7 +14,11 @@ try:
     logging.info(f"Loading embedding model from {EMBEDDING_MODEL_PATH}")
     embedding_model = SentenceTransformer(EMBEDDING_MODEL_PATH)
 
-    query = "In the book Bigger Leaner Stronger, what are the top 5 takeaways for the person to know to get the benefits of calisthenics?"
+    # ================= Take query input from terminal ================= #
+    query = input("\nEnter your query: ").strip()
+    if not query:
+        raise ValueError("Query cannot be empty!")
+
     query_embedding = embedding_model.encode(query)
 
     # ================= ChromaDB Retrieval ================= #
@@ -22,14 +26,13 @@ try:
     client = chromadb.PersistentClient(path="/home/saif/Desktop/pdf_rag/chroma_db")
     collection = client.get_collection("pdf_chunks")
 
-    # Retrieve top 3 most similar chunks (instead of just 1)
     results = collection.query(
         query_embeddings=[query_embedding.tolist()],
-        n_results=3
+        n_results=10
     )
 
     retrieved_chunks = results["documents"][0]
-    context = "\n\n".join(retrieved_chunks)
+    context = "\n".join(retrieved_chunks)
     logging.info("Retrieved context injected into the prompt")
 
     # ================= LLaMA Model ================= #
@@ -50,7 +53,9 @@ try:
         max_new_tokens=512,
         temperature=0.7,
         top_p=0.9,
-        device_map="auto"
+        repetition_penalty=1.2,
+        device_map="auto",
+        return_full_text=False
     )
     logging.info("Local LLM loaded successfully")
 
@@ -72,12 +77,7 @@ try:
     logging.info("Generating response")
     response = llm_pipeline(prompt)[0]["generated_text"]
 
-    # if "<|assistant|>" in response:
-    #     response = response.split("<|assistant|>")[-1].strip()
-
     logging.info("Read Generated response below \n\n")
-    # print("Query:", query)
-    # print("\nRetrieved Context:\n", context)
     print("\nResponse:\n", response)
 
 except Exception as e:
