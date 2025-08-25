@@ -1,0 +1,8 @@
+stages:
+  document_loader:
+    cmd: python src/components/document_loader.py
+    deps:
+      - src/components/document_loader.py
+      - src/constant/__init__.py
+    outs:
+      - database/extracted_txt

@@ -1,0 +1,19 @@
+schema: '2.0'
+stages:
+  document_loader:
+    cmd: python src/components/document_loader.py
+    deps:
+    - path: src/components/document_loader.py
+      hash: md5
+      md5: 29638f3b82f2de52a36554c2053fdb3b
+      size: 927
+    - path: src/constant/__init__.py
+      hash: md5
+      md5: d2fde5af30f1247269a90a616f87bda4
+      size: 204
+    outs:
+    - path: database/extracted_txt
+      hash: md5
+      md5: 013df9df96a9fe5d1823e0b692eab83d.dir
+      size: 606906
+      nfiles: 1
