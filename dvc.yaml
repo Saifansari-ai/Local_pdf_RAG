@@ -6,3 +6,12 @@ stages:
       - src/constant/__init__.py
     outs:
       - database/extracted_txt
+
+  preprocessing_txt:
+    cmd: python src/components/preprocessing_txt.py
+    deps:
+      - src/components/preprocessing_txt.py
+      - src/constant/__init__.py
+      - database/extracted_txt
+    outs:
+      - database/cleaned_txt

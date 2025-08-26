@@ -3,13 +3,12 @@ import os
 import sys
 from src.logger import logging
 from src.exception import MyException
+from src.constant import * 
 
-file_path = "/home/saif/Desktop/pdf_rag/data/text_files"
-
-for file in os.listdir(file_path):
+for file in os.listdir(TEXT_PATH):
 
      try :
-        file_path = f"/home/saif/Desktop/pdf_rag/data/text_files/{file}"
+        file_path = os.path.join(TEXT_PATH, file)
         logging.info(f"cleaning and preprocessing started for {file_path}")
 
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -47,16 +46,19 @@ for file in os.listdir(file_path):
         logging.info(f"removing chapter x patterns completed for {file_path}")
         logging.info(f"removing non-letters started for {file_path}")
 
-        text = re.sub(r"[^a-z\s]", " ", text)   # keep only letters
+        text = re.sub(r"[^a-z\s]", " ", text)   
         text = re.sub(r"[ \t]+", " ", text).strip()
 
         logging.info(f"removing non-letters completed for {file_path}")
         logging.info(f"saving the cleaned text started for {file_path}")
 
-        save_path = f"/home/saif/Desktop/pdf_rag/data/cleaned_txt_file/cleaned_{file}"
+        
+        save_path = os.path.join(CLEANED_TXT, f"cleaned_{file}")
+        os.makedirs(CLEANED_TXT, exist_ok=True)
+      
         with open(save_path, 'w', encoding='utf-8') as f:
            f.write(text)
-        logging.info(f"cleaned text saved to {save_path} for {file_path}") 
+        logging.info(f"cleaned text saved to {save_path} from {file_path}") 
 
      except Exception as e:
         raise MyException(e,sys) from e

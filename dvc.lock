@@ -5,15 +5,37 @@ stages:
     deps:
     - path: src/components/document_loader.py
       hash: md5
-      md5: 29638f3b82f2de52a36554c2053fdb3b
-      size: 927
+      md5: 86b85fcc3c6139905c164c6144282727
+      size: 855
     - path: src/constant/__init__.py
       hash: md5
-      md5: d2fde5af30f1247269a90a616f87bda4
-      size: 204
+      md5: db276b77398ed802a469d93c5204e5bd
+      size: 302
     outs:
     - path: database/extracted_txt
       hash: md5
-      md5: 013df9df96a9fe5d1823e0b692eab83d.dir
+      md5: 8029766d7c67531ae144738656452dfb.dir
       size: 606906
+      nfiles: 1
+  preprocessing_txt:
+    cmd: python src/components/preprocessing_txt.py
+    deps:
+    - path: database/extracted_txt
+      hash: md5
+      md5: 8029766d7c67531ae144738656452dfb.dir
+      size: 606906
+      nfiles: 1
+    - path: src/components/preprocessing_txt.py
+      hash: md5
+      md5: 54c622456a85dc5589edc44d8a2012e8
+      size: 2268
+    - path: src/constant/__init__.py
+      hash: md5
+      md5: db276b77398ed802a469d93c5204e5bd
+      size: 302
+    outs:
+    - path: database/cleaned_txt
+      hash: md5
+      md5: 18e2569d8df0df4fbc774f095c807439.dir
+      size: 584662
       nfiles: 1
