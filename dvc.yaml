@@ -15,3 +15,12 @@ stages:
       - database/extracted_txt
     outs:
       - database/cleaned_txt
+
+  chunk:
+    cmd: python src/components/chunk.py
+    deps:
+      - src/components/chunk.py
+      - src/constant/__init__.py
+      - database/cleaned_txt
+    outs:
+      - database/chunk

@@ -9,8 +9,8 @@ stages:
       size: 855
     - path: src/constant/__init__.py
       hash: md5
-      md5: db276b77398ed802a469d93c5204e5bd
-      size: 302
+      md5: 8de9c6f1c07fde4ff07ea603b3cf64d5
+      size: 393
     outs:
     - path: database/extracted_txt
       hash: md5
@@ -31,11 +31,33 @@ stages:
       size: 2268
     - path: src/constant/__init__.py
       hash: md5
-      md5: db276b77398ed802a469d93c5204e5bd
-      size: 302
+      md5: 8de9c6f1c07fde4ff07ea603b3cf64d5
+      size: 393
     outs:
     - path: database/cleaned_txt
       hash: md5
       md5: 18e2569d8df0df4fbc774f095c807439.dir
       size: 584662
+      nfiles: 1
+  chunk:
+    cmd: python src/components/chunk.py
+    deps:
+    - path: database/cleaned_txt
+      hash: md5
+      md5: 18e2569d8df0df4fbc774f095c807439.dir
+      size: 584662
+      nfiles: 1
+    - path: src/components/chunk.py
+      hash: md5
+      md5: 4345e7416ccbd395e3ca9ecd5bd18dde
+      size: 2262
+    - path: src/constant/__init__.py
+      hash: md5
+      md5: 8de9c6f1c07fde4ff07ea603b3cf64d5
+      size: 393
+    outs:
+    - path: database/chunk
+      hash: md5
+      md5: 9776d244316592a0cb67096c2e4db519.dir
+      size: 805210
       nfiles: 1
