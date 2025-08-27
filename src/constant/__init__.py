@@ -17,3 +17,7 @@ BATCH_SIZE=32
 CONVERT_TO_NUMPY=True
 SHOW_PROGRESS_BAR=True 
 EMBEDDINGS_PATH = "/home/saif/Desktop/pdf_rag/database/embeddings"
+
+# For ChromaDB
+CHROMA_DB_PATH = "/home/saif/Desktop/pdf_rag/chromadb"
+COLLECTION_NAME = "txt_chunks"

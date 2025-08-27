@@ -33,3 +33,12 @@ stages:
       - database/chunk
     outs:
       - database/embeddings
+
+  vectorDB:
+    cmd: python src/components/vectorDB.py
+    deps:
+      - src/components/vectorDB.py
+      - src/constant/__init__.py
+      - database/embeddings
+    outs:
+      - chromadb
