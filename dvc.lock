@@ -9,8 +9,8 @@ stages:
       size: 855
     - path: src/constant/__init__.py
       hash: md5
-      md5: 8de9c6f1c07fde4ff07ea603b3cf64d5
-      size: 393
+      md5: e5dfb3e6f1c18fdd78cc62048c0f5237
+      size: 618
     outs:
     - path: database/extracted_txt
       hash: md5
@@ -31,8 +31,8 @@ stages:
       size: 2268
     - path: src/constant/__init__.py
       hash: md5
-      md5: 8de9c6f1c07fde4ff07ea603b3cf64d5
-      size: 393
+      md5: e5dfb3e6f1c18fdd78cc62048c0f5237
+      size: 618
     outs:
     - path: database/cleaned_txt
       hash: md5
@@ -53,11 +53,33 @@ stages:
       size: 2262
     - path: src/constant/__init__.py
       hash: md5
-      md5: 8de9c6f1c07fde4ff07ea603b3cf64d5
-      size: 393
+      md5: e5dfb3e6f1c18fdd78cc62048c0f5237
+      size: 618
     outs:
     - path: database/chunk
       hash: md5
       md5: 9776d244316592a0cb67096c2e4db519.dir
       size: 805210
+      nfiles: 1
+  embed_gen:
+    cmd: python src/components/embed_gen.py
+    deps:
+    - path: database/chunk
+      hash: md5
+      md5: 9776d244316592a0cb67096c2e4db519.dir
+      size: 805210
+      nfiles: 1
+    - path: src/components/embed_gen.py
+      hash: md5
+      md5: ed66ab14eb30bbffacfc52635bc39cf0
+      size: 1964
+    - path: src/constant/__init__.py
+      hash: md5
+      md5: e5dfb3e6f1c18fdd78cc62048c0f5237
+      size: 618
+    outs:
+    - path: database/embeddings
+      hash: md5
+      md5: ba65b23ec11306a59ca18d94b85ad5d1.dir
+      size: 16486089
       nfiles: 1

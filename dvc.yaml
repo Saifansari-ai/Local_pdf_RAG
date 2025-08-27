@@ -24,3 +24,12 @@ stages:
       - database/cleaned_txt
     outs:
       - database/chunk
+
+  embed_gen:
+    cmd: python src/components/embed_gen.py
+    deps:
+      - src/components/embed_gen.py
+      - src/constant/__init__.py
+      - database/chunk
+    outs:
+      - database/embeddings
