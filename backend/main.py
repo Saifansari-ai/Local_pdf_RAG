@@ -12,6 +12,9 @@ TEXT_DIR = "web_data/text"
 os.makedirs(PDF_DIR, exist_ok=True)
 os.makedirs(TEXT_DIR, exist_ok=True)
 
+CLEANED_TEXT_DIR = "web_data/cleaned_text"
+os.makedirs(CLEANED_TEXT_DIR, exist_ok=True)
+
 
 # Serve frontend directory
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -29,13 +32,13 @@ async def upload_pdf(file: UploadFile = File(...)):
         f.write(await file.read())
 
     # Run RAGPipeline to extract text
-    pipeline = RAGPipeline(pdf_path=PDF_DIR, text_path=TEXT_DIR)
+    pipeline = RAGPipeline(pdf_path=PDF_DIR, text_path=TEXT_DIR, cleaned_text_path=CLEANED_TEXT_DIR)
     pipeline.preprocess_text()
 
     return f"""
     <html>
         <body>
-            <h2>✅ Successfully uploaded and processed {file.filename} and extracted text saved to {TEXT_DIR}!</h2>
+            <h2>✅ Successfully uploaded</h2>
             <a href="/">Go back</a>
         </body>
     </html>
