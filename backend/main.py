@@ -15,6 +15,14 @@ os.makedirs(TEXT_DIR, exist_ok=True)
 CLEANED_TEXT_DIR = "web_data/cleaned_text"
 os.makedirs(CLEANED_TEXT_DIR, exist_ok=True)
 
+CHUNK_FILE = "web_data/chunks"
+os.makedirs(CHUNK_FILE, exist_ok=True)
+
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 200
+
+SOURCE_NAME = "merged_text"
+
 
 # Serve frontend directory
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -32,7 +40,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         f.write(await file.read())
 
     # Run RAGPipeline to extract text
-    pipeline = RAGPipeline(pdf_path=PDF_DIR, text_path=TEXT_DIR, cleaned_text_path=CLEANED_TEXT_DIR)
+    pipeline = RAGPipeline(pdf_path=PDF_DIR, text_path=TEXT_DIR, cleaned_text_path=CLEANED_TEXT_DIR,chunk_file=CHUNK_FILE,chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP,source_name=SOURCE_NAME)
     pipeline.preprocess_text()
 
     return f"""

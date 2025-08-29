@@ -5,13 +5,18 @@ from src.exception import MyException
 import json
 from pathlib import Path
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from src.constant import *
 
 # Chunking the text file 
 
-try:
-    logging.info("Starting the process of chunking text")
-    def load_text(file_path):
+class Chunk:
+    def __init__(self, cleaned_text_path: str, chunk_file: str,chunk_size: int, chunk_overlap: int,source_name: str):
+        self.cleaned_text_path = cleaned_text_path
+        self.chunk_file = chunk_file
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.source_name = source_name
+
+    def load_text(self,file_path):
         """Load text from a file."""
         for file in os.listdir(file_path):
             if file.endswith(".txt"):
@@ -19,7 +24,7 @@ try:
         with open(file, "r", encoding="utf-8") as f:
             return f.read()
 
-    def chunk_text(text, chunk_size=1000, chunk_overlap=200):
+    def chunk_text(self,text, chunk_size=1000, chunk_overlap=200):
         """Split text into chunks using RecursiveCharacterTextSplitter."""
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
@@ -28,7 +33,7 @@ try:
         )
         return splitter.split_text(text)
 
-    def save_chunks_to_json(chunks, chunk_file, source_name="merged_text"):
+    def save_chunks_to_json(self,chunks, chunk_file, source_name="merged_text"):
         """Save chunks into a JSON file with metadata."""
         chunk_data = []
         for i, chunk in enumerate(chunks):
@@ -39,7 +44,6 @@ try:
                     "source": source_name
                 }
             })
-        os.makedirs(chunk_file, exist_ok=True)
         path = os.path.join(chunk_file, f"{source_name}.json")
         
         logging.info(f"Saving chunks to {path}")
@@ -48,21 +52,21 @@ try:
             json.dump(chunk_data, f, ensure_ascii=False, indent=2)
         logging.info(f"✅ Saved chunks to {path}")
 
-    def main():
-        logging.info(f"✅ Loading text from {CLEANED_TXT}")
+    def main(self):
+        try:
+            logging.info("Starting the process of chunking text")
+            logging.info(f"✅ Loading text from {self.cleaned_text_path}")
         
-        text = load_text(CLEANED_TXT)
-        logging.info(f"✅ Loaded text, length: {len(text)} characters")
+            text = self.load_text(self.cleaned_text_path)
+            logging.info(f"✅ Loaded text, length: {len(text)} characters")
 
-        logging.info("starting the process of chunking text")
-        chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
-        logging.info(f"✅ Created {len(chunks)} chunks")
+            logging.info("starting the process of chunking text")
+            chunks = self.chunk_text(text, self.chunk_size, self.chunk_overlap)
+            logging.info(f"✅ Created {len(chunks)} chunks")
 
-        save_chunks_to_json(chunks, CHUNK_FILE, SOURCE_NAME)
+            self.save_chunks_to_json(chunks, self.chunk_file, self.source_name)
         
 
-    if __name__ == "__main__":
-        main()
-
-except Exception as e:
-    raise MyException(e, sys) from e
+        except Exception as e:
+            raise MyException(e, sys) from e
+        
