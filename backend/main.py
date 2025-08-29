@@ -27,6 +27,7 @@ EMBED_MODEL_PATH = "/home/saif/Desktop/pre_trained_llms/bge-base-en-v1.5"
 EMBEDDINGS_PATH = "web_data/embeddings"
 os.makedirs(EMBEDDINGS_PATH,exist_ok=True)
 
+CHROMA_DB_PATH = "/home/saif/Desktop/pdf_rag/chromadb"
 
 # Serve frontend directory
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -46,7 +47,8 @@ async def upload_pdf(file: UploadFile = File(...)):
     # Run RAGPipeline to extract text
     pipeline = RAGPipeline(pdf_path=PDF_DIR, text_path=TEXT_DIR, cleaned_text_path=CLEANED_TEXT_DIR,
                            chunk_file=CHUNK_FILE,chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP,
-                           source_name=SOURCE_NAME,embed_model_path=EMBED_MODEL_PATH,embeddings_path=EMBEDDINGS_PATH)
+                           source_name=SOURCE_NAME,embed_model_path=EMBED_MODEL_PATH,embeddings_path=EMBEDDINGS_PATH,
+                           chroma_db_path=CHROMA_DB_PATH)
     pipeline.preprocess_text()
 
     return f"""
