@@ -1,11 +1,24 @@
 import os
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from backend.rag_pipeline import RAGPipeline
+from backend.rag_query import RAGQueryEngine  
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 PDF_DIR = "web_data/pdfs"
 TEXT_DIR = "web_data/text"
@@ -25,9 +38,12 @@ SOURCE_NAME = "merged_text"
 
 EMBED_MODEL_PATH = "/home/saif/Desktop/pre_trained_llms/bge-base-en-v1.5"
 EMBEDDINGS_PATH = "web_data/embeddings"
-os.makedirs(EMBEDDINGS_PATH,exist_ok=True)
+os.makedirs(EMBEDDINGS_PATH, exist_ok=True)
 
 CHROMA_DB_PATH = "/home/saif/Desktop/pdf_rag/chromadb"
+
+LLM_MODEL_PATH = "/home/saif/Desktop/pre_trained_llms/gemma-3-270m-it"
+
 
 # Serve frontend directory
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
@@ -44,14 +60,22 @@ async def upload_pdf(file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
-    # Run RAGPipeline to extract text
-    pipeline = RAGPipeline(pdf_path=PDF_DIR, text_path=TEXT_DIR, cleaned_text_path=CLEANED_TEXT_DIR,
-                           chunk_file=CHUNK_FILE,chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP,
-                           source_name=SOURCE_NAME,embed_model_path=EMBED_MODEL_PATH,embeddings_path=EMBEDDINGS_PATH,
-                           chroma_db_path=CHROMA_DB_PATH)
+    # Run RAGPipeline to extract + store embeddings
+    pipeline = RAGPipeline(
+        pdf_path=PDF_DIR,
+        text_path=TEXT_DIR,
+        cleaned_text_path=CLEANED_TEXT_DIR,
+        chunk_file=CHUNK_FILE,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
+        source_name=SOURCE_NAME,
+        embed_model_path=EMBED_MODEL_PATH,
+        embeddings_path=EMBEDDINGS_PATH,
+        chroma_db_path=CHROMA_DB_PATH
+    )
     pipeline.preprocess_text()
 
-    return f"""
+    return """
     <html>
         <body>
             <h2>✅ Successfully uploaded</h2>
@@ -59,3 +83,18 @@ async def upload_pdf(file: UploadFile = File(...)):
         </body>
     </html>
     """
+
+
+@app.post("/query/")
+async def query_document(question: str = Form(...)):
+    # Instantiate query engine only when needed
+    try:
+        query_engine = RAGQueryEngine(
+            embedding_model_path=EMBED_MODEL_PATH,
+            chroma_db_path=CHROMA_DB_PATH,
+            llm_model_path=LLM_MODEL_PATH
+        )
+        answer = query_engine.query(question)
+        return {"answer": answer}
+    except Exception as e:
+        return {"error": "No documents available. Please upload a PDF first."}

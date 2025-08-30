@@ -17,15 +17,16 @@
     </div>
   </nav>
 
-  <!-- Upload Box -->
-  <div class="flex-grow flex flex-col items-center justify-center">
+  <!-- Upload Section -->
+  <div id="uploadSection" class="flex-grow flex flex-col items-center justify-center">
     <div class="bg-white shadow-2xl rounded-2xl p-8 w-96">
       <h2 class="text-2xl font-bold mb-6 text-center text-blue-700">Upload Your PDF</h2>
       
       <form id="uploadForm" enctype="multipart/form-data" class="flex flex-col items-center">
-        <label for="fileInput" id="fileLabel" class="cursor-pointer flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-400 rounded-lg bg-blue-50 hover:bg-blue-100">
+        <label for="fileInput" id="fileLabel" 
+          class="cursor-pointer flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-400 rounded-lg bg-blue-50 hover:bg-blue-100">
           <span class="text-4xl">📂</span>
-          <span class="mt-2 text-gray-600" id="fileName">Click or Drag & Drop</span>
+          <span class="mt-2 text-gray-600" id="fileName">Click</span>
         </label>
         <input type="file" id="fileInput" name="file" accept="application/pdf" class="hidden" />
         
@@ -34,8 +35,32 @@
           🚀 Upload & Process
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- Processing Section -->
+  <div id="processingSection" class="flex-grow flex flex-col items-center justify-center hidden">
+    <div class="bg-white shadow-2xl rounded-2xl p-8 w-96 text-center">
+      <h2 class="text-xl font-semibold text-blue-700">⏳ Preprocessing PDF...</h2>
+      <p class="mt-4 text-gray-600">Please wait, this may take a few moments.</p>
+    </div>
+  </div>
+
+  <!-- Query Section (hidden until PDF is processed) -->
+  <div id="querySection" class="flex-grow flex flex-col items-center justify-center hidden">
+    <div class="bg-white shadow-2xl rounded-2xl p-8 w-3/4 max-w-2xl">
+      <h2 class="text-2xl font-bold mb-6 text-center text-blue-700">Ask Questions about your PDF</h2>
       
-      <div id="result" class="mt-6 text-sm text-gray-700 whitespace-pre-wrap"></div>
+      <form id="queryForm" class="flex">
+        <input type="text" id="queryInput" placeholder="Type your question..."
+          class="flex-grow border rounded-l-lg p-2 focus:outline-none"/>
+        <button type="submit"
+          class="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700">
+          Ask
+        </button>
+      </form>
+      
+      <div id="chatBox" class="mt-6 max-h-96 overflow-y-auto space-y-4 text-gray-800"></div>
     </div>
   </div>
 
@@ -46,16 +71,21 @@
 
   <script>
     const form = document.getElementById("uploadForm");
-    const resultDiv = document.getElementById("result");
     const fileInput = document.getElementById("fileInput");
     const fileNameSpan = document.getElementById("fileName");
+    const uploadSection = document.getElementById("uploadSection");
+    const processingSection = document.getElementById("processingSection");
+    const querySection = document.getElementById("querySection");
+    const queryForm = document.getElementById("queryForm");
+    const queryInput = document.getElementById("queryInput");
+    const chatBox = document.getElementById("chatBox");
 
     // Show file name when user selects a PDF
     fileInput.addEventListener("change", () => {
       if (fileInput.files.length > 0) {
         fileNameSpan.textContent = `📄 ${fileInput.files[0].name}`;
       } else {
-        fileNameSpan.textContent = "Click or Drag & Drop";
+        fileNameSpan.textContent = "Click";
       }
     });
 
@@ -64,14 +94,16 @@
       e.preventDefault();
 
       if (!fileInput.files.length) {
-        resultDiv.innerHTML = "⚠️ Please select a PDF first!";
+        alert("⚠️ Please select a PDF first!");
         return;
       }
 
       const formData = new FormData();
       formData.append("file", fileInput.files[0]);
 
-      resultDiv.innerHTML = "⏳ Uploading and extracting...";
+      // Switch to processing view
+      uploadSection.classList.add("hidden");
+      processingSection.classList.remove("hidden");
 
       try {
         const res = await fetch("http://127.0.0.1:8000/upload_pdf/", {
@@ -79,14 +111,52 @@
           body: formData
         });
 
-        if (!res.ok) {
-          throw new Error("Failed to upload PDF");
-        }
+        if (!res.ok) throw new Error("Failed to upload PDF");
 
-        const text = await res.text();
-        resultDiv.innerHTML = text;
+        // Switch to query section once preprocessing is done
+        processingSection.classList.add("hidden");
+        querySection.classList.remove("hidden");
+
       } catch (err) {
-        resultDiv.innerHTML = `❌ Error: ${err.message}`;
+        processingSection.classList.add("hidden");
+        uploadSection.classList.remove("hidden");
+        alert(`❌ Error: ${err.message}`);
+      }
+    });
+
+    // Handle query submit
+    queryForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const question = queryInput.value.trim();
+      if (!question) return;
+
+      // Display user question in chat
+      const userDiv = document.createElement("div");
+      userDiv.className = "bg-blue-100 p-2 rounded-lg text-blue-800";
+      userDiv.textContent = `🧑‍💻: ${question}`;
+      chatBox.appendChild(userDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      queryInput.value = "";
+
+      // Placeholder for assistant reply
+      const botDiv = document.createElement("div");
+      botDiv.className = "bg-gray-100 p-2 rounded-lg text-gray-800";
+      botDiv.textContent = "⏳ Thinking...";
+      chatBox.appendChild(botDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/query/", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ question })
+        });
+
+        const data = await res.json();
+        botDiv.textContent = `🤖: ${data.answer}`;
+      } catch (err) {
+        botDiv.textContent = `❌ Error: ${err.message}`;
       }
     });
   </script>
